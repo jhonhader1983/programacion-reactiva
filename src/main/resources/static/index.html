@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventario de Productos</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f6f9;
+      color: #333;
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #888;
+      margin-bottom: 2rem;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 2rem;
+    }
+
+    .metric {
+      background: #fff;
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      border: 1px solid #e8e8e8;
+    }
+
+    .metric-label {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 6px;
+    }
+
+    .metric-value {
+      font-size: 26px;
+      font-weight: 500;
+    }
+
+    .metric-sub {
+      font-size: 12px;
+      color: #aaa;
+      margin-top: 4px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 1.25rem;
+      border: 1px solid #e8e8e8;
+    }
+
+    .card-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin-bottom: 12px;
+    }
+
+    .card-name {
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .card-id {
+      font-size: 12px;
+      color: #aaa;
+      margin-bottom: 12px;
+    }
+
+    .card-price {
+      font-size: 24px;
+      font-weight: 500;
+    }
+
+    .card-price span {
+      font-size: 13px;
+      color: #888;
+      font-weight: 400;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+
+    .footer {
+      margin-top: 2rem;
+      font-size: 12px;
+      color: #bbb;
+      text-align: right;
+    }
+
+    #loading {
+      text-align: center;
+      color: #888;
+      padding: 2rem;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Inventario de productos</h1>
+  <p class="subtitle">Catálogo actualizado en tiempo real</p>
+
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-label">Total productos</div>
+      <div class="metric-value" id="total">-</div>
+      <div class="metric-sub">en catálogo</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Precio promedio</div>
+      <div class="metric-value" id="promedio">-</div>
+      <div class="metric-sub">USD</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Valor total</div>
+      <div class="metric-value" id="valorTotal">-</div>
+      <div class="metric-sub">USD</div>
+    </div>
+  </div>
+
+  <div id="loading">Cargando productos...</div>
+  <div class="cards" id="cards"></div>
+
+  <div class="footer">API: localhost:8080/api/productos</div>
+
+  <script>
+    const iconos = {
+      "1": { emoji: "💻", bg: "#E6F1FB", color: "#185FA5", badge: "Electrónico", badgeBg: "#E6F1FB", badgeColor: "#185FA5" },
+      "2": { emoji: "🖱️", bg: "#E1F5EE", color: "#0F6E56", badge: "Accesorio",   badgeBg: "#E1F5EE", badgeColor: "#0F6E56" },
+      "3": { emoji: "⌨️", bg: "#FAEEDA", color: "#854F0B", badge: "Accesorio",   badgeBg: "#FAEEDA", badgeColor: "#854F0B" }
+    };
+
+    fetch('/api/productos')
+      .then(res => res.json())
+      .then(productos => {
+        document.getElementById('loading').style.display = 'none';
+
+        const total = productos.length;
+        const suma = productos.reduce((acc, p) => acc + p.precio, 0);
+        const promedio = Math.round(suma / total);
+
+        document.getElementById('total').textContent = total;
+        document.getElementById('promedio').textContent = '$' + promedio.toLocaleString();
+        document.getElementById('valorTotal').textContent = '$' + suma.toLocaleString();
+
+        const contenedor = document.getElementById('cards');
+        productos.forEach(p => {
+          const info = iconos[p.id] || { emoji: "📦", bg: "#f4f4f4", badge: "Producto", badgeBg: "#f4f4f4", badgeColor: "#666" };
+          contenedor.innerHTML += `
+            <div class="card">
+              <div class="card-icon" style="background:${info.bg}; font-size:20px;">${info.emoji}</div>
+              <div class="card-name">${p.nombre}</div>
+              <div class="card-id">ID: #${p.id}</div>
+              <div class="card-price">$${p.precio.toLocaleString()} <span>USD</span></div>
+              <div class="badge" style="background:${info.badgeBg}; color:${info.badgeColor};">${info.badge}</div>
+            </div>`;
+        });
+      })
+      .catch(() => {
+        document.getElementById('loading').textContent = 'Error al cargar los productos.';
+      });
+  </script>
+
+</body>
+</html>
